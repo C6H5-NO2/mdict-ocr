@@ -8,9 +8,13 @@ message(STATUS "ROOT DIR: ${ROOT_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "bin/debug")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "bin/release")
 
-add_executable(${PROJECT_NAME} "src/main.cpp")
+add_executable(${PROJECT_NAME} "src/main.cpp" "src/ocr.cpp" "src/capture.cpp")
 target_include_directories(${PROJECT_NAME} PRIVATE "${ROOT_DIR}/include")
-target_sources(${PROJECT_NAME} PRIVATE "src/main.cpp")
+target_sources(${PROJECT_NAME}
+               PRIVATE
+               "src/main.cpp"
+               "src/ocr.cpp"
+               "src/capture.cpp")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${ROOT_DIR}")
