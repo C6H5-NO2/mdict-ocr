@@ -10,7 +10,7 @@ using namespace winrt::Windows::Graphics::Imaging;
 using namespace winrt::Windows::Media::Ocr;
 
 
-std::wstring ocr(const SoftwareBitmap& sbm, const int distance_threshold) {
+std::wstring ocr(const SoftwareBitmap& sbm, const float distance_threshold) {
     assert((std::max(sbm.PixelWidth(), sbm.PixelHeight()) <= OcrEngine::MaxImageDimension()));
 
     const auto lang = Language(L"en-US");
@@ -24,18 +24,21 @@ std::wstring ocr(const SoftwareBitmap& sbm, const int distance_threshold) {
     // todo: handle rotation
     //auto angle = result.TextAngle().Value();
 
-    auto min_dis = sbm.PixelWidth() + sbm.PixelHeight();
+    const auto px = sbm.PixelWidth() / 2, py = sbm.PixelHeight() / 2;
+    auto min_dis = distance_threshold + 1;
     auto opt_word = winrt::hstring();
 
     for(const auto& line : result.Lines()) {
         for(const auto& word : line.Words()) {
             const auto aabb = word.BoundingRect();
-            const auto center_x = aabb.X + aabb.Width / 2;
-            const auto center_y = aabb.Y + aabb.Height / 2;
+            const auto cx = aabb.X + aabb.Width / 2, cy = aabb.Y + aabb.Height / 2;
+            const auto dx = std::max(std::abs(px - cx) - aabb.Width / 2, .0f);
+            const auto dy = std::max(std::abs(py - cy) - aabb.Height / 2, .0f);
+            const auto dis = std::sqrt(dx * dx + dy * dy);
 
-            const auto dis = std::abs(center_x - sbm.PixelWidth() / 2) + std::abs(center_y - sbm.PixelHeight() / 2);
+            if(dis < 1e-5)
+                return word.Text().c_str();
 
-            // todo: use mouse position to test instead
             if(dis < distance_threshold && dis < min_dis) {
                 min_dis = dis;
                 opt_word = word.Text();

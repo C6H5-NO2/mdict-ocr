@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-
+// todo: consider using the new IGraphicsCaptureItemInterop::CreateForWindow() api
 
 /// @brief Call this function once.
 void aware_dpi();
