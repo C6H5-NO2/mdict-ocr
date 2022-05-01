@@ -1,6 +1,9 @@
 # mdict-ocr
 `mdict-ocr` provides an optical character recognition (OCR) wrapper for the [MDict app](https://www.mdict.cn/).
 
+![](https://user-images.githubusercontent.com/19368807/166148204-5095d23a-9e4f-48e3-976b-116d9add75a1.png)
+
+
 
 ## Prerequisites
 - Windows 10 with corresponding language packs installed
@@ -19,9 +22,9 @@
 
 ## Developing
 0. The project uses [WinUI 2](https://docs.microsoft.com/en-us/windows/apps/winui/winui2) and [XAML Islands](https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/xaml-islands), requiring the following NuGet packages to be installed.
-  - [Microsoft.UI.Xaml](https://www.nuget.org/packages/Microsoft.UI.Xaml)
-  - [Microsoft.Windows.CppWinRT](https://www.nuget.org/packages/Microsoft.Windows.CppWinRT)
-  - [Microsoft.Toolkit.Win32.UI.SDK](https://www.nuget.org/packages/Microsoft.Toolkit.Win32.UI.SDK)
+    - [Microsoft.UI.Xaml](https://www.nuget.org/packages/Microsoft.UI.Xaml)
+    - [Microsoft.Windows.CppWinRT](https://www.nuget.org/packages/Microsoft.Windows.CppWinRT)
+    - [Microsoft.Toolkit.Win32.UI.SDK](https://www.nuget.org/packages/Microsoft.Toolkit.Win32.UI.SDK)
 
 1. Add a reference to the Windows Runtime metadata, which is under `C:/Program Files (x86)/Windows Kits/10/UnionMetadata/[Windows 10 SDK version]/Windows.winmd`. (See [step 6 here](https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/host-standard-control-with-xaml-islands-cpp#create-a-desktop-application-project))
 
