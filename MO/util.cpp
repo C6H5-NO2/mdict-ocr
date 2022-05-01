@@ -1,59 +1,50 @@
 #include "util.h"
 
-#include <Unknwn.h>
-
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.Graphics.Imaging.h>
-
-#include <MemoryBuffer.h>
-
 #include <Windows.h>
 
 
-using namespace winrt::Windows::Graphics::Imaging;
-
-
 namespace MO {
-    Bytes BitmapToBytes(HBITMAP bm, HDC dc) {
-        BITMAP bmObj;
-        GetObject(bm, sizeof(BITMAP), &bmObj);
-        assert((bmObj.bmPlanes == 1) && "bmPlanes == 1");
-        assert((bmObj.bmBitsPixel == 32) && "bmBitsPixel == 32");
-
-        BITMAPINFO bmInfo;
-        bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        bmInfo.bmiHeader.biWidth = bmObj.bmWidth;
-        bmInfo.bmiHeader.biHeight = -bmObj.bmHeight;
-        bmInfo.bmiHeader.biPlanes = 1;
-        bmInfo.bmiHeader.biBitCount = 32;
-        bmInfo.bmiHeader.biCompression = BI_RGB;
-        bmInfo.bmiHeader.biSizeImage = 0;
-        bmInfo.bmiHeader.biXPelsPerMeter = 0;
-        bmInfo.bmiHeader.biYPelsPerMeter = 0;
-        bmInfo.bmiHeader.biClrUsed = 0;
-        bmInfo.bmiHeader.biClrImportant = 0;
-
-        const auto bmSize = bmObj.bmWidth * bmObj.bmHeight * 4; // 32 bits => 4 bytes
-        auto bytes = std::make_unique<unsigned char[]>(bmSize); // make_shared since C++20
-        GetDIBits(dc, bm, 0, bmObj.bmHeight, bytes.get(), &bmInfo, DIB_RGB_COLORS);
-        return bytes;
+    void AwareDPI() {
+        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
     }
 
 
-    SoftwareBitmap BytesToSbm(const unsigned char* bytes, const int width, const int height) {
-        auto sbm = SoftwareBitmap(BitmapPixelFormat::Bgra8, width, height, BitmapAlphaMode::Premultiplied);
-        auto buf = sbm.LockBuffer(BitmapBufferAccessMode::Write);
-        auto ref = buf.CreateReference();
+    bool SendWord(const std::wstring& word, const bool sendKeyup) {
+        const auto keyCount = (2 + word.length()) * (sendKeyup ? 2 : 1);
+        const auto keys = std::make_unique<INPUT[]>(keyCount);
+        memset(keys.get(), 0, keyCount * sizeof(INPUT));
 
-        unsigned char* sbmValue;
-        unsigned capacity;
-        ref.as<Windows::Foundation::IMemoryBufferByteAccess>()->GetBuffer(&sbmValue, &capacity);
+        auto currIdx = 0;
+        const auto addKeyup = [&]() {
+            keys[currIdx] = keys[currIdx - 1];
+            keys[currIdx].ki.dwFlags |= KEYEVENTF_KEYUP;
+            ++currIdx;
+        };
 
-        assert((buf.GetPlaneDescription(0).StartIndex == 0) && "StartIndex == 0");
-        assert((buf.GetPlaneDescription(0).Stride == width * 4) && "Stride == width * 4");
+        keys[currIdx].type = INPUT_KEYBOARD;
+        keys[currIdx].ki.wVk = VK_RETURN; // first enter to gain focus of search bar
+        ++currIdx;
+        if(sendKeyup)
+            addKeyup();
 
-        memcpy(sbmValue, bytes, width * height * 4);
+        for(const auto& chr : word) {
+            keys[currIdx].type = INPUT_KEYBOARD;
+            keys[currIdx].ki.wVk = 0;
+            keys[currIdx].ki.wScan = chr;
+            keys[currIdx].ki.dwFlags = KEYEVENTF_UNICODE;
+            ++currIdx;
+            if(sendKeyup)
+                addKeyup();
+        }
 
-        return sbm;
+        keys[currIdx].type = INPUT_KEYBOARD;
+        keys[currIdx].ki.wVk = VK_RETURN; // second enter to do search
+        ++currIdx;
+        if(sendKeyup)
+            addKeyup();
+
+        SendInput(keyCount, keys.get(), sizeof(INPUT));
+
+        return true;
     }
 }

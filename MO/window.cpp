@@ -25,7 +25,7 @@ namespace MO {
         }
 
         HWND hwnd = CreateWindowEx(0, wc.lpszClassName, WINDOW_NAME, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-                                   CW_USEDEFAULT, CW_USEDEFAULT, 320, 180,
+                                   CW_USEDEFAULT, CW_USEDEFAULT, 640, 360,
                                    nullptr, nullptr, hInstance, nullptr);
         if(hwnd == nullptr) {
             fprintf_s(stderr, "[ERROR] CreateWindowEx() errno %lu\n", GetLastError());
@@ -43,7 +43,7 @@ namespace MO {
             if(wParam == WM_KEYUP) {
                 auto* kbdll = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
                 auto hwnd = FindWindow(CLASS_NAME, WINDOW_NAME);
-                PostMessage(hwnd, WM_USER, kbdll->vkCode, 0); // send as WPARAM
+                PostMessage(hwnd, WM_PICK_WORD, kbdll->vkCode, 0); // send as WPARAM
             }
         }
         return CallNextHookEx(nullptr, nCode, wParam, lParam);
@@ -54,7 +54,7 @@ namespace MO {
         auto hhook = SetWindowsHookEx(WH_KEYBOARD_LL, HookProc, nullptr, 0);
         if(hhook == nullptr)
             fprintf_s(stderr, "[ERROR] SetWindowsHookEx() errno %lu\n", GetLastError());
-        return UniqueHandle<HHOOK>(hhook, [](auto hhk) { UnhookWindowsHookEx(hhk); });
+        return { hhook, [](auto hhk) { UnhookWindowsHookEx(hhk); } };
     }
 
 

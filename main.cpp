@@ -2,6 +2,7 @@
 #include "MO/capture.h"
 #include "MO/console.h"
 #include "MO/ocr.h"
+#include "MO/ui.h"
 #include "MO/util.h"
 #include "MO/window.h"
 
@@ -9,32 +10,6 @@
 
 #include <chrono>
 #include <thread>
-
-
-void HandleKey(const MO::ScreenCapturer& capturer, const MO::OcrWrapper& ocre, const DWORD vkCode) {
-    fprintf_s(stdout, "[LOG] vkCode %lu\n", vkCode);
-    // use left control as hot key
-    if(vkCode != VK_LCONTROL)
-        return;
-
-    auto word = MO::GetWord(capturer, ocre);
-    if(word.length() == 0)
-        return;
-
-    fprintf_s(stdout, "[LOG] OCR: %ls\n", word.c_str());
-    if(word.length() > 32) // if too long
-        return;
-
-    auto mdictHwnd = FindWindow(nullptr, MO::MDICT);
-    if(mdictHwnd == nullptr) {
-        fprintf_s(stderr, "[WARN] MDict window not found.\n");
-        return;
-    }
-
-    MO::MoveToFront(mdictHwnd);
-
-    MO::SendWord(word);
-}
 
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCmdShow) {
@@ -45,31 +20,39 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     MO::RedirectOutput();
     #endif
 
-    if(MO::ShowMainWindow(hInstance, nCmdShow) == nullptr)
+    auto hwnd = MO::ShowMainWindow(hInstance, nCmdShow);
+    if(hwnd == nullptr)
         return 0;
 
-    auto hook = MO::CreateKbllHook();
-    if(hook == nullptr)
+    auto kbhook = MO::CreateKbllHook();
+    if(kbhook == nullptr)
         return 0;
 
-    auto capturer = MO::ScreenCapturer();
+    MO::ScreenCapturer capturer;
     if(!capturer)
         return 0;
 
-    auto ocre = MO::OcrWrapper();
+    MO::OcrWrapper ocre;
     if(!ocre)
         return 0;
 
+    MO::UIWrapper ui(hwnd);
+
+    MO::App app{ &capturer, &ocre, &ui };
+
+    ui.Connect(&app);
+
     MSG msg{};
     while(GetMessage(&msg, nullptr, 0, 0) > 0) {
-        if(msg.message == WM_USER) {
-            HandleKey(capturer, ocre, msg.wParam);
-        }
+        if(ui.FilterMessage(&msg))
+            continue;
+        if(msg.message == MO::WM_PICK_WORD)
+            app.HandleKey(msg.wParam);
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
-    hook.reset();
+    kbhook.reset();
 
     #ifdef _DEBUG
     MO::RestoreOutput();
