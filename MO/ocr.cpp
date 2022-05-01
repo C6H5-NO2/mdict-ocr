@@ -1,6 +1,8 @@
 #include "ocr.h"
 
+#include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Globalization.h>
+#include <winrt/Windows.Graphics.Imaging.h>
 
 #include <future>
 
@@ -11,22 +13,21 @@ using namespace winrt::Windows::Media::Ocr;
 
 
 namespace MO {
-    OcrWrapper::OcrWrapper(std::wstring langTag) : Engine(nullptr) {
-        const auto lang = Language(langTag);
-        Engine = OcrEngine::TryCreateFromLanguage(lang);
-        if(Engine == nullptr)
-            fprintf_s(stderr, "[ERROR] Language [%ls] is not supported.\n", lang.LanguageTag().c_str());
-    }
-
-
-    OcrWrapper::OcrWrapper(OcrWrapper&& other) noexcept : Engine(nullptr) {
-        Engine = std::move(other.Engine); // perhaps this works
-        other.Engine = nullptr;
+    OcrWrapper::OcrWrapper(const std::wstring& langTag) : Engine(OcrEngine::TryCreateFromLanguage(Language(langTag))) {
+        if(Engine == nullptr) {
+            fprintf_s(stderr, "[ERROR] Language '%ls", langTag.c_str());
+            fprintf_s(stderr, "' is not supported.\n");
+        }
     }
 
 
     OcrWrapper::operator bool() const noexcept {
         return !!Engine;
+    }
+
+
+    void OcrWrapper::HotSwitchLanguage(const std::wstring& langTag) {
+        Engine = OcrEngine::TryCreateFromLanguage(Language(langTag));
     }
 
 
@@ -85,5 +86,14 @@ namespace MO {
 
     std::wstring OcrWrapper::LanguageTag() const noexcept {
         return Engine.RecognizerLanguage().LanguageTag().c_str();
+    }
+
+
+    std::vector<std::wstring> OcrWrapper::AvailableLanguages() noexcept {
+        auto langs = OcrEngine::AvailableRecognizerLanguages();
+        std::vector<std::wstring> ret;
+        for(auto idx = 0u; idx < langs.Size(); ++idx)
+            ret.emplace_back(langs.GetAt(idx).LanguageTag().c_str());
+        return ret;
     }
 }

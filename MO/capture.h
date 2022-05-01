@@ -1,15 +1,11 @@
 #pragma once
+#ifndef MO_CAPTURE_H_
+#define MO_CAPTURE_H_
 
-#include "util.h"
-
-#include <utility>
+#include "image.h"
 
 
 namespace MO {
-    /// @note Call this function only once.
-    void AwareDPI();
-
-
     class ScreenCapturer {
     public:
         explicit ScreenCapturer();
@@ -22,10 +18,13 @@ namespace MO {
 
         explicit operator bool() const noexcept;
 
-        /// @param dims First param is width, second be height.
-        Bytes Capture(const std::pair<int, int> dims) const;
+        Bytes Capture(const int width, const int height) const;
+
 
     protected:
         HDC ScrDC, MemDC;
     };
 }
+
+
+#endif

@@ -16,7 +16,7 @@ namespace MO {
         freopen_s(&fp, "CONOUT$", "w", stdout);
         freopen_s(&fp, "CONOUT$", "w", stderr);
 
-        printf_s("!!! DO NOT CLOSE CONSOLE !!!\n");
+        printf_s("!!! DO NOT CLOSE CONSOLE WINDOW DIRECTLY !!!\n");
     }
 
 

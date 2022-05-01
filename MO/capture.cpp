@@ -4,11 +4,6 @@
 
 
 namespace MO {
-    void AwareDPI() {
-        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
-    }
-
-
     // todo: consider using the new IGraphicsCaptureItemInterop::CreateForWindow() api
     ScreenCapturer::ScreenCapturer() : ScrDC(GetDC(nullptr)),
                                        MemDC(CreateCompatibleDC(ScrDC)) {
@@ -17,9 +12,8 @@ namespace MO {
     }
 
 
-    ScreenCapturer::ScreenCapturer(ScreenCapturer&& other) noexcept {
-        ScrDC = other.ScrDC;
-        MemDC = other.MemDC;
+    ScreenCapturer::ScreenCapturer(ScreenCapturer&& other) noexcept : ScrDC(other.ScrDC),
+                                                                      MemDC(other.MemDC) {
         other.MemDC = nullptr;
         other.ScrDC = nullptr;
     }
@@ -38,8 +32,8 @@ namespace MO {
     }
 
 
-    Bytes ScreenCapturer::Capture(const std::pair<int, int> dims) const {
-        auto memBM = CreateCompatibleBitmap(ScrDC, dims.first, dims.second);
+    Bytes ScreenCapturer::Capture(const int width, const int height) const {
+        auto memBM = CreateCompatibleBitmap(ScrDC, width, height);
         auto prvBM = SelectObject(MemDC, memBM);
 
         POINT cursorPos;
@@ -48,8 +42,8 @@ namespace MO {
         Bytes buffer = nullptr;
 
         // do capture
-        if(FALSE == BitBlt(MemDC, 0, 0, dims.first, dims.second, ScrDC,
-                           cursorPos.x - dims.first / 2, cursorPos.y - dims.second / 2, SRCCOPY | BLACKNESS)) {
+        if(FALSE == BitBlt(MemDC, 0, 0, width, height,
+                           ScrDC, cursorPos.x - width / 2, cursorPos.y - height / 2, SRCCOPY | BLACKNESS)) {
             fprintf_s(stderr, "[ERROR] Failed to capture screen. BitBlt() errno %lu\n", GetLastError());
         }
         else {
