@@ -1,5 +1,7 @@
 #include "window.h"
 
+#undef max
+
 
 namespace MO {
     LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -24,9 +26,14 @@ namespace MO {
             return nullptr;
         }
 
-        HWND hwnd = CreateWindowEx(0, wc.lpszClassName, WINDOW_NAME, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-                                   CW_USEDEFAULT, CW_USEDEFAULT, 640, 360,
-                                   nullptr, nullptr, hInstance, nullptr);
+        // todo: scale ui accordingly
+        const auto dpiScale = std::max(GetDpiForSystem() / 96.f, 1.f);
+        fprintf_s(stdout, "[DEBUG] dpi: %f\n", dpiScale);
+        HWND hwnd = CreateWindowEx(
+            0, wc.lpszClassName, WINDOW_NAME, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+            CW_USEDEFAULT, CW_USEDEFAULT, int(640 * dpiScale), int(360 * dpiScale),
+            nullptr, nullptr, hInstance, nullptr
+        );
         if(hwnd == nullptr) {
             fprintf_s(stderr, "[ERROR] CreateWindowEx() errno %lu\n", GetLastError());
             return nullptr;

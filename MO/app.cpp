@@ -21,7 +21,7 @@ using namespace winrt::Windows::UI::Xaml;
 
 namespace MO {
     void App::HandleKey(const unsigned vkCode) const {
-        fprintf_s(stdout, "[DEBUG] vkCode %lu\n", vkCode);
+        fprintf_s(stdout, "[DEBUG] vkCode: %lu\n", vkCode);
         // use left control as hot key
         if(vkCode != VK_LCONTROL)
             return;
@@ -30,8 +30,8 @@ namespace MO {
         if(word.length() == 0)
             return;
 
-        fprintf_s(stdout, "[DEBUG] OCR: %ls", word.c_str());
-        fprintf_s(stdout, "\n");
+        fprintf_s(stdout, "[DEBUG] OCR: '%ls", word.c_str());
+        fprintf_s(stdout, "'\n");
         SetSearchText(word);
 
         if(word.length() > MaxSearchLength) // if too long
@@ -94,8 +94,8 @@ namespace MO {
     void App::OnLanguageSelectionChanged(const IInspectable& sender, const Controls::SelectionChangedEventArgs& args) const {
         auto lang = winrt::unbox_value<winrt::hstring>(args.AddedItems().GetAt(0));
         if(std::wcscmp(lang.c_str(), Ocre->LanguageTag().c_str()) != 0) {
-            fprintf_s(stdout, "[INFO] OCR language switch to %ls", lang.c_str());
-            fprintf_s(stdout, "\n");
+            fprintf_s(stdout, "[INFO] OCR language switch to '%ls", lang.c_str());
+            fprintf_s(stdout, "'\n");
             Ocre->HotSwitchLanguage(lang.c_str());
         }
     }

@@ -116,7 +116,7 @@ namespace MO {
 
         Controls::ScrollViewer rstSrl;
         rstSrl.Content(rstTxt);
-        rstSrl.MaxHeight(100);
+        rstSrl.MaxHeight(200);
         mainContainer.Children().Append(rstSrl);
 
         // ||
